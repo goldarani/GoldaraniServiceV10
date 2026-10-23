@@ -144,61 +144,118 @@ public class MainActivity extends Activity {
 
     private void showHome() {
         page="home"; setup("خانه");
-        LinearLayout welcome=column(); welcome.setPadding(dp(16),dp(15),dp(16),dp(15));
-        welcome.setBackground(new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,new int[]{Color.rgb(14,45,72),Color.rgb(5,19,36)}));
-        TextView hi=text("سلام "+userName+" عزیز 👋",22,GOLD,true); welcome.addView(hi);
-        welcome.addView(text("به سرویس‌یار گلدرانی خوش آمدید",14,WHITE,false));
-        TextView badge=text("GOLDARANI  •  ELEVATOR SERVICE",10,MUTED,true); badge.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL); welcome.addView(badge);
+
+        // Glass-style welcome panel with a premium navy/gold palette.
+        LinearLayout welcome=column();
+        welcome.setPadding(dp(18),dp(18),dp(18),dp(18));
+        GradientDrawable heroBg=new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            new int[]{Color.rgb(24,65,101),Color.rgb(10,31,54),Color.rgb(5,18,34)});
+        heroBg.setCornerRadius(dp(24));
+        heroBg.setStroke(dp(1),Color.rgb(71,126,171));
+        welcome.setBackground(heroBg);
+
+        LinearLayout brandRow=row();
+        LinearLayout logo=column(); logo.setGravity(Gravity.CENTER);
+        logo.setBackground(shape(Color.rgb(246,190,79),17,Color.rgb(255,224,151)));
+        TextView logoIcon=text("⇅",27,Color.rgb(7,22,41),true); logoIcon.setGravity(Gravity.CENTER);
+        logo.addView(logoIcon,new LinearLayout.LayoutParams(dp(54),dp(54)));
+        brandRow.addView(logo,new LinearLayout.LayoutParams(dp(58),dp(58)));
+        LinearLayout brandText=column(); brandText.setPadding(dp(12),0,0,0);
+        brandText.addView(text("سرویس‌یار گلدرانی",21,GOLD,true));
+        brandText.addView(text("مدیریت هوشمند سرویس آسانسور",13,WHITE,false));
+        brandRow.addView(brandText,new LinearLayout.LayoutParams(0,-2,1));
+        welcome.addView(brandRow);
+
+        View gap=new View(this); welcome.addView(gap,new LinearLayout.LayoutParams(1,dp(12)));
+        welcome.addView(text("سلام "+userName+" عزیز 👋",19,WHITE,true));
+        welcome.addView(text("امروز هم کارهایت را مرتب و سریع مدیریت کن.",13,Color.rgb(190,211,232),false));
+        TextView badge=text("GOLDARANI  •  ELEVATOR SERVICE",10,GOLD,true);
+        badge.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL); badge.setPadding(0,dp(10),0,0); welcome.addView(badge);
         card(content,welcome);
-        TextView section=text("مدیریت خدمات شما",17,txt(),true); section.setPadding(dp(2),dp(10),dp(2),dp(5)); content.addView(section);
+
+        LinearLayout sectionRow=row();
+        sectionRow.addView(text("دسترسی سریع",17,txt(),true),new LinearLayout.LayoutParams(0,-2,1));
+        TextView sectionTag=text("پنل مدیریت",11,GOLD,true); sectionTag.setGravity(Gravity.CENTER);
+        sectionTag.setPadding(dp(10),dp(5),dp(10),dp(5)); sectionTag.setBackground(shape(dark?Color.rgb(24,49,70):Color.rgb(255,247,225),20,dark?Color.rgb(91,120,146):Color.rgb(226,194,125)));
+        sectionRow.addView(sectionTag); content.addView(sectionRow);
+
         LinearLayout grid1=row(); grid1.setWeightSum(2);
-        gridTile(grid1,"🏢","ثبت پرونده ساختمان",BLUE,()->showForm("services"));
-        gridTile(grid1,"📅","سرویس‌های امروز",TEAL,()->showServiceList("today"));
-        content.addView(grid1);
+        gridTile(grid1,"▦","ثبت پرونده ساختمان",BLUE,()->showForm("services"));
+        gridTile(grid1,"◷","سرویس‌های امروز",TEAL,()->showServiceList("today")); content.addView(grid1);
         LinearLayout grid2=row(); grid2.setWeightSum(2);
         gridTile(grid2,"✓","انجام‌شده‌ها",PURPLE,()->showServiceList("completed"));
-        gridTile(grid2,"📋","پرونده‌های ساختمان و سرویس",TEAL,()->showServiceList("all"));
-        content.addView(grid2);
+        gridTile(grid2,"▤","همه پرونده‌ها",Color.rgb(40,105,151),()->showServiceList("all")); content.addView(grid2);
         LinearLayout grid3=row(); grid3.setWeightSum(2);
-        gridTile(grid3,"💰","طلب‌ها",ORANGE,()->showList("debts"));
-        gridTile(grid3,"⚙","تنظیمات",PURPLE,()->showSettings()); content.addView(grid3);
-        TextView summary=text("خلاصه وضعیت",16,txt(),true); summary.setPadding(dp(2),dp(14),dp(2),dp(5)); content.addView(summary);
+        gridTile(grid3,"◉","طلب‌ها",ORANGE,()->showList("debts"));
+        gridTile(grid3,"⚙","تنظیمات",Color.rgb(75,91,130),()->showSettings()); content.addView(grid3);
+
+        TextView summaryTitle=text("خلاصه وضعیت",17,txt(),true);
+        summaryTitle.setPadding(dp(2),dp(14),dp(2),dp(5)); content.addView(summaryTitle);
         LinearLayout stats=row();
-        stat(stats,"ساختمان/سرویس",db.count("services"),BLUE); stat(stats,"طلب‌ها",db.count("debts"),ORANGE);
-        content.addView(stats);
-        LinearLayout due=column(); due.addView(text("مجموع طلب‌های ثبت‌شده",14,muted(),true));
-        due.addView(text(money(db.totalDebts())+" تومان",24,GOLD,true));
-        card(content,due);
-        LinearLayout support=column(); support.addView(text("پشتیبانی اختصاصی",15,txt(),true)); support.addView(text("0912-468-2580",15,GOLD,true));
+        stat(stats,"پرونده‌ها",db.count("services"),BLUE);
+        stat(stats,"طلب‌های ثبت‌شده",db.count("debts"),ORANGE); content.addView(stats);
+
+        LinearLayout due=column(); due.setPadding(dp(16),dp(14),dp(16),dp(14));
+        GradientDrawable dueBg=new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+            new int[]{Color.rgb(30,62,85),Color.rgb(12,33,53)});
+        dueBg.setCornerRadius(dp(20)); dueBg.setStroke(dp(1),Color.rgb(192,151,67)); due.setBackground(dueBg);
+        LinearLayout dueHead=row();
+        TextView coin=text("◉",24,GOLD,true); coin.setGravity(Gravity.CENTER); dueHead.addView(coin,new LinearLayout.LayoutParams(dp(38),dp(38)));
+        LinearLayout dueLabels=column(); dueLabels.setPadding(dp(9),0,0,0);
+        dueLabels.addView(text("مجموع طلب‌های ثبت‌شده",13,WHITE,true));
+        dueLabels.addView(text("فقط طلب‌هایی که جداگانه ثبت شده‌اند",11,Color.rgb(185,205,224),false));
+        dueHead.addView(dueLabels,new LinearLayout.LayoutParams(0,-2,1)); due.addView(dueHead);
+        TextView total=text(money(db.totalDebts())+" تومان",25,GOLD,true); total.setPadding(0,dp(8),0,0); due.addView(total);
+        LinearLayout.LayoutParams dueLp=new LinearLayout.LayoutParams(-1,-2); dueLp.setMargins(0,dp(7),0,dp(7)); content.addView(due,dueLp);
+
+        LinearLayout support=column(); support.setPadding(dp(14),dp(12),dp(14),dp(12));
+        support.addView(text("نیاز به راهنمایی داری؟",14,txt(),true));
+        support.addView(text("پشتیبانی سرویس‌یار گلدرانی  •  0912-468-2580",12,muted(),false));
         card(content,support);
-        addButton("تماس با پشتیبانی",PANEL2,()->dial("09124682580"));
+        addButton("تماس با پشتیبانی  ↗",PANEL2,()->dial("09124682580"));
         addBottomNav();
     }
 
     private void gridTile(LinearLayout parent,String emoji,String label,int color,Runnable click) {
-        LinearLayout tile=column(); tile.setGravity(Gravity.CENTER); tile.setPadding(dp(6),dp(14),dp(6),dp(14)); tile.setBackground(shape(color,18,0));
-        TextView ic=text(emoji,25,Color.WHITE,true); ic.setGravity(Gravity.CENTER); tile.addView(ic);
-        TextView tx=text(label,14,Color.WHITE,true); tx.setGravity(Gravity.CENTER); tile.addView(tx);
-        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(112),1); lp.setMargins(dp(4),dp(4),dp(4),dp(4)); parent.addView(tile,lp);
+        LinearLayout tile=column(); tile.setGravity(Gravity.CENTER);
+        tile.setPadding(dp(8),dp(13),dp(8),dp(13));
+        GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            new int[]{dark?Color.rgb(27,58,83):Color.rgb(255,255,255),dark?Color.rgb(12,34,55):Color.rgb(232,241,249)});
+        glass.setCornerRadius(dp(20));
+        glass.setStroke(dp(1),dark?Color.rgb(55,94,125):Color.rgb(203,219,233));
+        tile.setBackground(glass);
+        TextView ic=text(emoji,24,color,true); ic.setGravity(Gravity.CENTER);
+        ic.setBackground(shape(dark?Color.rgb(25,55,78):Color.rgb(235,243,250),16,color));
+        LinearLayout.LayoutParams iconLp=new LinearLayout.LayoutParams(dp(48),dp(48)); iconLp.bottomMargin=dp(8); tile.addView(ic,iconLp);
+        TextView tx=text(label,13,txt(),true); tx.setGravity(Gravity.CENTER); tile.addView(tx);
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(108),1); lp.setMargins(dp(4),dp(4),dp(4),dp(4)); parent.addView(tile,lp);
         tile.setOnClickListener(v->click.run());
     }
 
     private void stat(LinearLayout parent,String label,int count,int color) {
-        LinearLayout box=column(); box.setGravity(Gravity.CENTER); box.setPadding(dp(4),dp(9),dp(4),dp(9)); box.setBackground(shape(panel(),14,color));
-        TextView n=text(""+count,22,color,true); n.setGravity(Gravity.CENTER); box.addView(n);
+        LinearLayout box=column(); box.setGravity(Gravity.CENTER); box.setPadding(dp(8),dp(12),dp(8),dp(12));
+        GradientDrawable glass=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[]{dark?Color.rgb(24,52,76):Color.WHITE,dark?Color.rgb(11,31,51):Color.rgb(231,240,248)});
+        glass.setCornerRadius(dp(17)); glass.setStroke(dp(1),dark?Color.rgb(50,83,111):Color.rgb(207,220,232)); box.setBackground(glass);
+        TextView n=text(""+count,23,color,true); n.setGravity(Gravity.CENTER); box.addView(n);
         TextView l=text(label,11,txt(),false); l.setGravity(Gravity.CENTER); box.addView(l);
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1); lp.setMargins(dp(3),0,dp(3),0); parent.addView(box,lp);
     }
 
     private void addBottomNav() {
-        LinearLayout nav=row(); nav.setPadding(dp(5),dp(7),dp(5),dp(7)); nav.setBackgroundColor(dark?Color.rgb(5,17,32):Color.rgb(225,234,243));
-        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"＋","ثبت پرونده",()->showForm("services"));
-        navItem(nav,"▤","پرونده‌ها",()->showServiceList("all")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
+        LinearLayout nav=row(); nav.setPadding(dp(5),dp(7),dp(5),dp(7));
+        GradientDrawable navBg=new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[]{dark?Color.rgb(13,34,54):Color.rgb(250,252,255),dark?Color.rgb(5,17,32):Color.rgb(225,234,243)});
+        navBg.setStroke(dp(1),dark?Color.rgb(44,76,103):Color.rgb(208,221,234));
+        navBg.setCornerRadius(dp(20)); nav.setBackground(navBg);
+        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"▦","پرونده‌ها",()->showServiceList("all"));
+        navItem(nav,"＋","ثبت",()->showForm("services")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
         root.addView(nav);
     }
     private void navItem(LinearLayout nav,String icon,String label,Runnable r) {
-        LinearLayout item=column(); item.setGravity(Gravity.CENTER);
-        TextView a=text(icon,17,GOLD,true); a.setGravity(Gravity.CENTER); item.addView(a);
+        LinearLayout item=column(); item.setGravity(Gravity.CENTER); item.setPadding(0,dp(2),0,dp(2));
+        TextView a=text(icon,18,GOLD,true); a.setGravity(Gravity.CENTER); item.addView(a);
         TextView b=text(label,10,txt(),false); b.setGravity(Gravity.CENTER); item.addView(b);
         nav.addView(item,new LinearLayout.LayoutParams(0,-2,1)); item.setOnClickListener(v->r.run());
     }
