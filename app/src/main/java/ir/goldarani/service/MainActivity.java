@@ -157,10 +157,14 @@ public class MainActivity extends Activity {
 
         LinearLayout brandRow=row();
         LinearLayout logo=column(); logo.setGravity(Gravity.CENTER);
-        logo.setBackground(shape(Color.rgb(246,190,79),17,Color.rgb(255,224,151)));
-        TextView logoIcon=text("⇅",27,Color.rgb(7,22,41),true); logoIcon.setGravity(Gravity.CENTER);
+        GradientDrawable logoBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            new int[]{Color.rgb(255,220,139),Color.rgb(224,158,43)});
+        logoBg.setCornerRadius(dp(18));
+        logoBg.setStroke(dp(1),Color.rgb(255,239,194));
+        logo.setBackground(logoBg);
+        ElevatorMark logoIcon=new ElevatorMark();
         logo.addView(logoIcon,new LinearLayout.LayoutParams(dp(54),dp(54)));
-        brandRow.addView(logo,new LinearLayout.LayoutParams(dp(58),dp(58)));
+        brandRow.addView(logo,new LinearLayout.LayoutParams(dp(62),dp(62)));
         LinearLayout brandText=column(); brandText.setPadding(dp(12),0,0,0);
         brandText.addView(text("سرویس‌یار گلدرانی",21,GOLD,true));
         brandText.addView(text("مدیریت هوشمند سرویس آسانسور",13,WHITE,false));
@@ -168,10 +172,25 @@ public class MainActivity extends Activity {
         welcome.addView(brandRow);
 
         View gap=new View(this); welcome.addView(gap,new LinearLayout.LayoutParams(1,dp(12)));
-        welcome.addView(text("سلام "+userName+" عزیز 👋",19,WHITE,true));
-        welcome.addView(text("امروز هم کارهایت را مرتب و سریع مدیریت کن.",13,Color.rgb(190,211,232),false));
-        TextView badge=text("GOLDARANI  •  ELEVATOR SERVICE",10,GOLD,true);
-        badge.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL); badge.setPadding(0,dp(10),0,0); welcome.addView(badge);
+        LinearLayout greeting=row();
+        LinearLayout greetingText=column();
+        greetingText.addView(text("سلام "+userName+" عزیز 👋",19,WHITE,true));
+        greetingText.addView(text("امروز هم کارهایت را مرتب و سریع مدیریت کن.",13,Color.rgb(190,211,232),false));
+        greeting.addView(greetingText,new LinearLayout.LayoutParams(0,-2,1));
+        TextView live=text("●",12,Color.rgb(95,230,183),true);
+        live.setGravity(Gravity.CENTER);
+        live.setBackground(shape(Color.rgb(16,67,70),22,Color.rgb(45,139,128)));
+        greeting.addView(live,new LinearLayout.LayoutParams(dp(30),dp(30)));
+        welcome.addView(greeting);
+        TextView badge=text("GOLDARANI  /  ELEVATOR SERVICE",10,GOLD,true);
+        badge.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);
+        badge.setPadding(0,dp(12),0,0);
+        welcome.addView(badge);
+        View accent=new View(this);
+        accent.setBackground(shape(GOLD,4,0));
+        LinearLayout.LayoutParams accentLp=new LinearLayout.LayoutParams(dp(58),dp(3));
+        accentLp.topMargin=dp(8);
+        welcome.addView(accent,accentLp);
         card(content,welcome);
 
         LinearLayout sectionRow=row();
@@ -465,6 +484,34 @@ public class MainActivity extends Activity {
     private void hideKeyboard() {try{((InputMethodManager)getSystemService(INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(root.getWindowToken(),0);}catch(Exception ignored){}}
 
     private long parseAmount(String raw) { if(raw==null)return 0; StringBuilder digits=new StringBuilder(); for(int i=0;i<raw.length();i++){char ch=raw.charAt(i); if(ch>='۰'&&ch<='۹') digits.append((char)(ch-'۰'+'0')); else if(ch>='٠'&&ch<='٩') digits.append((char)(ch-'٠'+'0')); else if(ch>='0'&&ch<='9') digits.append(ch); } try{return Long.parseLong(digits.toString());}catch(Exception e){return 0;} }
+
+
+    // Custom elevator mark: drawn in code, so it needs no image assets or extra libraries.
+    private class ElevatorMark extends View {
+        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        ElevatorMark() { super(MainActivity.this); }
+        @Override protected void onDraw(android.graphics.Canvas canvas) {
+            super.onDraw(canvas);
+            float w=getWidth(), h=getHeight();
+            float cx=w/2f, top=h*0.13f, bottom=h*0.87f;
+            paint.setStyle(android.graphics.Paint.Style.STROKE);
+            paint.setStrokeWidth(dp(2.2f));
+            paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
+            paint.setColor(Color.rgb(7,22,41));
+            canvas.drawRoundRect(cx-w*.28f,top,cx+w*.28f,bottom,dp(5),dp(5),paint);
+            canvas.drawLine(cx,top+dp(4),cx,bottom-dp(4),paint);
+            paint.setStyle(android.graphics.Paint.Style.FILL);
+            canvas.drawCircle(cx, h*.30f, dp(2.2f), paint);
+            canvas.drawCircle(cx, h*.70f, dp(2.2f), paint);
+            paint.setStrokeWidth(dp(1.8f));
+            paint.setStyle(android.graphics.Paint.Style.STROKE);
+            canvas.drawLine(cx-w*.13f,h*.42f,cx,h*.34f,paint);
+            canvas.drawLine(cx,h*.34f,cx+w*.13f,h*.42f,paint);
+            canvas.drawLine(cx-w*.13f,h*.58f,cx,h*.66f,paint);
+            canvas.drawLine(cx,h*.66f,cx+w*.13f,h*.58f,paint);
+        }
+    }
 
     private class Db extends SQLiteOpenHelper {
         Db(Context c){super(c,"goldarani_local.db",null,4);}
