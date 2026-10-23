@@ -102,7 +102,8 @@ public class MainActivity extends Activity {
         titleStack.addView(text("GOLDARANI  •  SERVICE",9,GOLD,true));
         titleStack.addView(text(title,17,txt(),true));
         bar.addView(titleStack,new LinearLayout.LayoutParams(0,-2,1));
-        TextView mark = text("G", 21, NAVY, true); mark.setGravity(Gravity.CENTER);
+        TextView mark = text("G", 23, NAVY, true); mark.setGravity(Gravity.CENTER);
+        mark.setBackground(shape(GOLD, 13, Color.rgb(255,224,151)));
         mark.setBackground(shape(GOLD,14,Color.rgb(255,226,159)));
         bar.addView(mark,new LinearLayout.LayoutParams(dp(42),dp(42)));
         root.addView(bar);
@@ -117,7 +118,9 @@ public class MainActivity extends Activity {
     }
 
     private TextView button(String label, int color, Runnable action) {
-        TextView b = text(label, 15, Color.WHITE, true); b.setGravity(Gravity.CENTER);
+        int labelColor = (color == GOLD || color == BLUE || color == TEAL)
+                ? Color.rgb(7,22,41) : Color.WHITE;
+        TextView b = text(label, 15, labelColor, true); b.setGravity(Gravity.CENTER);
         b.setPadding(dp(14),dp(13),dp(14),dp(13)); b.setBackground(shape(color,15,0));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(6),0,dp(6));
         b.setOnClickListener(v -> action.run()); return b;
@@ -139,7 +142,7 @@ public class MainActivity extends Activity {
         e.setHint(hint); e.setTextColor(txt()); e.setHintTextColor(muted()); e.setTextSize(15*fontScale);
         if (iranSans != null) e.setTypeface(iranSans);
         e.setInputType(inputType); e.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
-        e.setPadding(dp(14),dp(9),dp(14),dp(9)); e.setBackground(shape(panel(),14,dark?Color.rgb(52,83,111):Color.rgb(190,205,220)));
+        e.setPadding(dp(14),dp(9),dp(14),dp(9)); e.setBackground(shape(panel(),14,dark?Color.rgb(55,82,108):Color.rgb(190,205,220)));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(6),0,dp(8));
         return e;
     }
@@ -300,7 +303,7 @@ public class MainActivity extends Activity {
         EditText notes=edit("توضیحات تکمیلی (اختیاری)","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         content.addView(title); content.addView(address); content.addView(manager); content.addView(phone);
         content.addView(date); content.addView(serviceAmount); content.addView(repairDetails); content.addView(repairAmount); content.addView(notes);
-        addButton("ثبت اطلاعات ساختمان و سرویس ✓",BLUE,()->{
+        addButton("ثبت اطلاعات ساختمان و سرویس ✓",GOLD,()->{
             String a=title.getText().toString().trim(), addr=address.getText().toString().trim(), mgr=manager.getText().toString().trim(), ph=phone.getText().toString().trim(), dt=date.getText().toString().trim();
             if(a.isEmpty()) {toast("نام ساختمان را وارد کنید");return;}
             if(addr.isEmpty()) {toast("آدرس ساختمان را وارد کنید");return;}
@@ -390,7 +393,7 @@ public class MainActivity extends Activity {
             item.addView(actions); card(content,item);
         }
         c.close();
-        addButton("+ ثبت پرونده ساختمان و سرویس",BLUE,()->showForm("services"));
+        addButton("+ ثبت پرونده ساختمان و سرویس",GOLD,()->showForm("services"));
         addButton("بازگشت به خانه",PANEL2,()->showHome());
     }
 
