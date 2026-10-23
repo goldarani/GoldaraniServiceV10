@@ -192,7 +192,7 @@ public class MainActivity extends Activity {
 
     private void addBottomNav() {
         LinearLayout nav=row(); nav.setPadding(dp(5),dp(7),dp(5),dp(7)); nav.setBackgroundColor(dark?Color.rgb(5,17,32):Color.rgb(225,234,243));
-        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"＋","ثبت ساختمان",()->showForm("services"));
+        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"＋","ثبت پرونده",()->showForm("services"));
         navItem(nav,"▤","پرونده‌ها",()->showServiceList("all")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
         root.addView(nav);
     }
@@ -229,7 +229,7 @@ public class MainActivity extends Activity {
             String extra=notes.getText().toString().trim();
             String desc=extra;
             db.insertService(a,normalizeJalaliDate(dt),desc,serviceCost,repairDetails.getText().toString().trim(),repairCost,addr,mgr,ph);
-            hideKeyboard(); toast("اطلاعات ساختمان و سرویس ثبت شد"); showServiceList("today");
+            hideKeyboard(); toast("اطلاعات ساختمان و سرویس ثبت شد"); showServiceList("pending");
         });
         addButton("مشاهده فهرست ساختمان‌ها و سرویس‌ها",PANEL2,()->showServiceList("all"));
     }
@@ -267,11 +267,12 @@ public class MainActivity extends Activity {
     }
 
     private void showServiceList(String filter) {
-        page="services"; setup(filter.equals("completed")?"سرویس‌های انجام‌شده":filter.equals("today")?"سرویس‌های امروز":"پرونده‌های ساختمان و سرویس");
+        page="services"; setup(filter.equals("completed")?"سرویس‌های انجام‌شده":filter.equals("today")?"سرویس‌های امروز":filter.equals("pending")?"سرویس‌های انجام‌نشده":"پرونده‌های ساختمان و سرویس");
         LinearLayout tabs=row();
         tab(tabs,"امروز",filter.equals("today"),()->showServiceList("today"));
+        tab(tabs,"انجام‌نشده",filter.equals("pending"),()->showServiceList("pending"));
         tab(tabs,"انجام‌شده",filter.equals("completed"),()->showServiceList("completed"));
-        tab(tabs,"همه پرونده‌ها",filter.equals("all"),()->showServiceList("all"));
+        tab(tabs,"همه",filter.equals("all"),()->showServiceList("all"));
         content.addView(tabs);
         LinearLayout summary=column();
         summary.addView(text("امروز: "+todayJalali(),14,GOLD,true));
@@ -281,7 +282,7 @@ public class MainActivity extends Activity {
         if(c.getCount()==0) {
             LinearLayout empty=column(); empty.setGravity(Gravity.CENTER); empty.setPadding(dp(15),dp(28),dp(15),dp(28));
             TextView e=text(filter.equals("completed")?"✓":"📅",34,GOLD,true);e.setGravity(Gravity.CENTER);empty.addView(e);
-            TextView msg=text(filter.equals("today")?"برای امروز سرویسی ثبت نشده است":filter.equals("completed")?"هنوز سرویسی انجام‌شده ثبت نشده است":"هنوز سرویسی ثبت نشده است",14,muted(),false);msg.setGravity(Gravity.CENTER);empty.addView(msg);card(content,empty);
+            TextView msg=text(filter.equals("today")?"برای امروز سرویسی ثبت نشده است":filter.equals("completed")?"هنوز سرویسی انجام‌شده ثبت نشده است":filter.equals("pending")?"سرویس انجام‌نشده‌ای وجود ندارد":"هنوز سرویسی ثبت نشده است",14,muted(),false);msg.setGravity(Gravity.CENTER);empty.addView(msg);card(content,empty);
         }
         while(c.moveToNext()) {
             final int id=c.getInt(0); String a=c.getString(1), date=c.getString(2), details=c.getString(3); boolean done=c.getInt(4)==1;
@@ -434,14 +435,22 @@ public class MainActivity extends Activity {
         }
         void delete(int id,String table){getWritableDatabase().delete(table,"_id=?",new String[]{String.valueOf(id)});}
         Cursor list(String table){return getReadableDatabase().rawQuery("SELECT _id,a,b,c FROM "+table+" ORDER BY _id DESC",null);}
-        Cursor serviceList(String filter,String today){ String where=""; if(filter.equals("today")) where=" WHERE completed=0 AND b=?"; else if(filter.equals("completed")) where=" WHERE completed=1"; String sql="SELECT _id,a,b,c,completed,service_amount,repair_details,repair_amount,address,manager,manager_phone FROM services"+where+" ORDER BY _id DESC"; return filter.equals("today") ? getReadableDatabase().rawQuery(sql,new String[]{today}) : getReadableDatabase().rawQuery(sql,null); }
+        Cursor serviceList(String filter,String today){
+            String where="";
+            if(filter.equals("today")) where=" WHERE completed=0 AND b=?";
+            else if(filter.equals("pending")) where=" WHERE completed=0";
+            else if(filter.equals("completed")) where=" WHERE completed=1";
+            String sql="SELECT _id,a,b,c,completed,service_amount,repair_details,repair_amount,address,manager,manager_phone FROM services"+where+" ORDER BY b ASC, _id DESC";
+            return filter.equals("today") ? getReadableDatabase().rawQuery(sql,new String[]{today}) : getReadableDatabase().rawQuery(sql,null);
+        }
         void markServiceDone(int id){getWritableDatabase().execSQL("UPDATE services SET completed=1 WHERE _id=?",new Object[]{id});}
         int countTodayServices(String today){Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM services WHERE completed=0 AND b=?",new String[]{today});int n=0;if(c.moveToFirst())n=c.getInt(0);c.close();return n;}
         long totalDebts(){
-            long total=0; Cursor c=getReadableDatabase().rawQuery("SELECT b FROM debts",null);
-            while(c.moveToNext()) total+=parseAmount(c.getString(0)); c.close();
-            Cursor s=getReadableDatabase().rawQuery("SELECT service_amount,repair_amount FROM services",null);
-            while(s.moveToNext()) total+=s.getLong(0)+s.getLong(1); s.close(); return total;
+            long total=0;
+            Cursor c=getReadableDatabase().rawQuery("SELECT b FROM debts",null);
+            while(c.moveToNext()) total+=parseAmount(c.getString(0));
+            c.close();
+            return total;
         }
         int count(String table){Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM "+table,null);int n=0;if(c.moveToFirst())n=c.getInt(0);c.close();return n;}
     }
