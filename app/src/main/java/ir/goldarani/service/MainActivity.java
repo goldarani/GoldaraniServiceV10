@@ -32,12 +32,15 @@ public class MainActivity extends Activity {
     private float fontScale = 1.0f;
     private LinearLayout root, content;
     private String page = "home";
+    private Typeface iranSans;
 
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
         getWindow().setStatusBarColor(NAVY);
         getWindow().setNavigationBarColor(NAVY);
         db = new Db(this);
+        try { iranSans = Typeface.createFromAsset(getAssets(), "fonts/IRANSans.ttf"); }
+        catch (Exception ignored) { iranSans = Typeface.create("sans-serif", Typeface.NORMAL); }
         android.content.SharedPreferences p = getSharedPreferences("profile", MODE_PRIVATE);
         userName = p.getString("name", "");
         userPhone = p.getString("phone", "");
@@ -62,7 +65,8 @@ public class MainActivity extends Activity {
         TextView t = new TextView(this);
         t.setText(s); t.setTextColor(color); t.setTextSize(size * fontScale);
         t.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        t.setTypeface(Typeface.create("sans-serif", bold ? Typeface.BOLD : Typeface.NORMAL));
+        t.setTypeface(iranSans != null ? Typeface.create(iranSans, bold ? Typeface.BOLD : Typeface.NORMAL)
+                                       : Typeface.create("sans-serif", bold ? Typeface.BOLD : Typeface.NORMAL));
         t.setPadding(dp(2), dp(3), dp(2), dp(3));
         return t;
     }
@@ -80,23 +84,41 @@ public class MainActivity extends Activity {
 
     private void setup(String title) {
         root = column(); root.setBackgroundColor(bg());
+        LinearLayout bar = row();
+        bar.setPadding(dp(16),dp(9),dp(16),dp(9));
+        GradientDrawable barBg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+            new int[]{dark ? Color.rgb(8,28,48) : Color.rgb(246,250,255),
+                      dark ? Color.rgb(4,17,31) : Color.rgb(224,235,246)});
+        barBg.setStroke(dp(1), dark ? Color.rgb(34,68,96) : Color.rgb(211,225,238));
+        bar.setBackground(barBg);
+        TextView back = text("‹", 27, GOLD, true); back.setGravity(Gravity.CENTER);
+        back.setBackground(shape(dark ? Color.rgb(19,46,69) : Color.WHITE, 14,
+                                 dark ? Color.rgb(51,88,118) : Color.rgb(208,221,234)));
+        bar.addView(back,new LinearLayout.LayoutParams(dp(42),dp(42)));
+        back.setOnClickListener(v -> showHome());
+        LinearLayout titleStack = column();
+        titleStack.setGravity(Gravity.CENTER_VERTICAL);
+        titleStack.setPadding(dp(12),0,dp(8),0);
+        titleStack.addView(text("GOLDARANI  •  SERVICE",9,GOLD,true));
+        titleStack.addView(text(title,17,txt(),true));
+        bar.addView(titleStack,new LinearLayout.LayoutParams(0,-2,1));
+        TextView mark = text("G", 21, NAVY, true); mark.setGravity(Gravity.CENTER);
+        mark.setBackground(shape(GOLD,14,Color.rgb(255,226,159)));
+        bar.addView(mark,new LinearLayout.LayoutParams(dp(42),dp(42)));
+        root.addView(bar);
+        View line = new View(this);
+        line.setBackgroundColor(GOLD);
+        root.addView(line,new LinearLayout.LayoutParams(-1,dp(2)));
         ScrollView sc = new ScrollView(this); sc.setFillViewport(true);
-        content = column(); content.setPadding(dp(18), dp(12), dp(18), dp(20));
+        content = column(); content.setPadding(dp(16), dp(14), dp(16), dp(22));
         sc.addView(content);
         root.addView(sc, new LinearLayout.LayoutParams(-1, 0, 1));
-        LinearLayout bar = row(); bar.setPadding(dp(16),dp(10),dp(16),dp(10)); bar.setBackgroundColor(dark ? Color.rgb(5,17,32) : Color.rgb(225,234,243));
-        TextView back = text("‹", 28, GOLD, true); back.setGravity(Gravity.CENTER); bar.addView(back,new LinearLayout.LayoutParams(dp(40),dp(42)));
-        back.setOnClickListener(v -> showHome());
-        TextView titleView = text(title, 18, txt(), true); titleView.setGravity(Gravity.CENTER);
-        bar.addView(titleView,new LinearLayout.LayoutParams(0,dp(42),1));
-        TextView mark = text("✦", 22, GOLD, true); mark.setGravity(Gravity.CENTER); bar.addView(mark,new LinearLayout.LayoutParams(dp(36),dp(42)));
-        root.addView(bar);
         setContentView(root);
     }
 
     private TextView button(String label, int color, Runnable action) {
         TextView b = text(label, 15, Color.WHITE, true); b.setGravity(Gravity.CENTER);
-        b.setPadding(dp(12),dp(13),dp(12),dp(13)); b.setBackground(shape(color,16,0));
+        b.setPadding(dp(14),dp(13),dp(14),dp(13)); b.setBackground(shape(color,15,0));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(6),0,dp(6));
         b.setOnClickListener(v -> action.run()); return b;
     }
@@ -107,13 +129,15 @@ public class MainActivity extends Activity {
 
     private void card(LinearLayout parent, View child) {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(6),0,dp(6));
-        child.setPadding(dp(14),dp(12),dp(14),dp(12)); child.setBackground(shape(panel(),18,dark?Color.rgb(31,66,96):Color.rgb(215,226,238)));
+        child.setPadding(dp(15),dp(13),dp(15),dp(13));
+        child.setBackground(shape(panel(),19,dark?Color.rgb(39,78,110):Color.rgb(211,225,238)));
         parent.addView(child,lp);
     }
 
     private EditText edit(String hint, String value, int inputType) {
         EditText e = new EditText(this); e.setSingleLine(true); e.setText(value);
         e.setHint(hint); e.setTextColor(txt()); e.setHintTextColor(muted()); e.setTextSize(15*fontScale);
+        if (iranSans != null) e.setTypeface(iranSans);
         e.setInputType(inputType); e.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
         e.setPadding(dp(14),dp(9),dp(14),dp(9)); e.setBackground(shape(panel(),14,dark?Color.rgb(52,83,111):Color.rgb(190,205,220)));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2); lp.setMargins(0,dp(6),0,dp(8));
@@ -157,14 +181,10 @@ public class MainActivity extends Activity {
 
         LinearLayout brandRow=row();
         LinearLayout logo=column(); logo.setGravity(Gravity.CENTER);
-        GradientDrawable logoBg=new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-            new int[]{Color.rgb(255,220,139),Color.rgb(224,158,43)});
-        logoBg.setCornerRadius(dp(18));
-        logoBg.setStroke(dp(1),Color.rgb(255,239,194));
-        logo.setBackground(logoBg);
-        ElevatorMark logoIcon=new ElevatorMark();
+        logo.setBackground(shape(Color.rgb(246,190,79),17,Color.rgb(255,224,151)));
+        TextView logoIcon=text("⇅",27,Color.rgb(7,22,41),true); logoIcon.setGravity(Gravity.CENTER);
         logo.addView(logoIcon,new LinearLayout.LayoutParams(dp(54),dp(54)));
-        brandRow.addView(logo,new LinearLayout.LayoutParams(dp(62),dp(62)));
+        brandRow.addView(logo,new LinearLayout.LayoutParams(dp(58),dp(58)));
         LinearLayout brandText=column(); brandText.setPadding(dp(12),0,0,0);
         brandText.addView(text("سرویس‌یار گلدرانی",21,GOLD,true));
         brandText.addView(text("مدیریت هوشمند سرویس آسانسور",13,WHITE,false));
@@ -172,25 +192,10 @@ public class MainActivity extends Activity {
         welcome.addView(brandRow);
 
         View gap=new View(this); welcome.addView(gap,new LinearLayout.LayoutParams(1,dp(12)));
-        LinearLayout greeting=row();
-        LinearLayout greetingText=column();
-        greetingText.addView(text("سلام "+userName+" عزیز 👋",19,WHITE,true));
-        greetingText.addView(text("امروز هم کارهایت را مرتب و سریع مدیریت کن.",13,Color.rgb(190,211,232),false));
-        greeting.addView(greetingText,new LinearLayout.LayoutParams(0,-2,1));
-        TextView live=text("●",12,Color.rgb(95,230,183),true);
-        live.setGravity(Gravity.CENTER);
-        live.setBackground(shape(Color.rgb(16,67,70),22,Color.rgb(45,139,128)));
-        greeting.addView(live,new LinearLayout.LayoutParams(dp(30),dp(30)));
-        welcome.addView(greeting);
-        TextView badge=text("GOLDARANI  /  ELEVATOR SERVICE",10,GOLD,true);
-        badge.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);
-        badge.setPadding(0,dp(12),0,0);
-        welcome.addView(badge);
-        View accent=new View(this);
-        accent.setBackground(shape(GOLD,4,0));
-        LinearLayout.LayoutParams accentLp=new LinearLayout.LayoutParams(dp(58),dp(3));
-        accentLp.topMargin=dp(8);
-        welcome.addView(accent,accentLp);
+        welcome.addView(text("سلام "+userName+" عزیز 👋",19,WHITE,true));
+        welcome.addView(text("امروز هم کارهایت را مرتب و سریع مدیریت کن.",13,Color.rgb(190,211,232),false));
+        TextView badge=text("GOLDARANI  •  ELEVATOR SERVICE",10,GOLD,true);
+        badge.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL); badge.setPadding(0,dp(10),0,0); welcome.addView(badge);
         card(content,welcome);
 
         LinearLayout sectionRow=row();
@@ -244,9 +249,11 @@ public class MainActivity extends Activity {
         glass.setCornerRadius(dp(20));
         glass.setStroke(dp(1),dark?Color.rgb(55,94,125):Color.rgb(203,219,233));
         tile.setBackground(glass);
-        TextView ic=text(emoji,24,color,true); ic.setGravity(Gravity.CENTER);
-        ic.setBackground(shape(dark?Color.rgb(25,55,78):Color.rgb(235,243,250),16,color));
-        LinearLayout.LayoutParams iconLp=new LinearLayout.LayoutParams(dp(48),dp(48)); iconLp.bottomMargin=dp(8); tile.addView(ic,iconLp);
+        IconView ic=new IconView(label,color);
+        ic.setBackground(shape(dark?Color.rgb(25,55,78):Color.rgb(235,243,250),16,
+                               dark?Color.rgb(54,91,120):Color.rgb(210,224,237)));
+        LinearLayout.LayoutParams iconLp=new LinearLayout.LayoutParams(dp(50),dp(50));
+        iconLp.bottomMargin=dp(9); tile.addView(ic,iconLp);
         TextView tx=text(label,13,txt(),true); tx.setGravity(Gravity.CENTER); tile.addView(tx);
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(108),1); lp.setMargins(dp(4),dp(4),dp(4),dp(4)); parent.addView(tile,lp);
         tile.setOnClickListener(v->click.run());
@@ -486,30 +493,39 @@ public class MainActivity extends Activity {
     private long parseAmount(String raw) { if(raw==null)return 0; StringBuilder digits=new StringBuilder(); for(int i=0;i<raw.length();i++){char ch=raw.charAt(i); if(ch>='۰'&&ch<='۹') digits.append((char)(ch-'۰'+'0')); else if(ch>='٠'&&ch<='٩') digits.append((char)(ch-'٠'+'0')); else if(ch>='0'&&ch<='9') digits.append(ch); } try{return Long.parseLong(digits.toString());}catch(Exception e){return 0;} }
 
 
-    // Custom elevator mark: drawn in code, so it needs no image assets or extra libraries.
-    private class ElevatorMark extends View {
-        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        ElevatorMark() { super(MainActivity.this); }
-        @Override protected void onDraw(android.graphics.Canvas canvas) {
-            super.onDraw(canvas);
-            float w=getWidth(), h=getHeight();
-            float cx=w/2f, top=h*0.13f, bottom=h*0.87f;
-            paint.setStyle(android.graphics.Paint.Style.STROKE);
-            paint.setStrokeWidth(dp(2.2f));
-            paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
-            paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
-            paint.setColor(Color.rgb(7,22,41));
-            canvas.drawRoundRect(cx-w*.28f,top,cx+w*.28f,bottom,dp(5),dp(5),paint);
-            canvas.drawLine(cx,top+dp(4),cx,bottom-dp(4),paint);
-            paint.setStyle(android.graphics.Paint.Style.FILL);
-            canvas.drawCircle(cx, h*.30f, dp(2.2f), paint);
-            canvas.drawCircle(cx, h*.70f, dp(2.2f), paint);
-            paint.setStrokeWidth(dp(1.8f));
-            paint.setStyle(android.graphics.Paint.Style.STROKE);
-            canvas.drawLine(cx-w*.13f,h*.42f,cx,h*.34f,paint);
-            canvas.drawLine(cx,h*.34f,cx+w*.13f,h*.42f,paint);
-            canvas.drawLine(cx-w*.13f,h*.58f,cx,h*.66f,paint);
-            canvas.drawLine(cx,h*.66f,cx+w*.13f,h*.58f,paint);
+    // Consistent vector-like icons drawn locally; no emoji fonts or external icon package required.
+    private class IconView extends View {
+        private final android.graphics.Paint p = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final String kind;
+        private final int color;
+        IconView(String label, int tint) { super(MainActivity.this); kind=label; color=tint; }
+        @Override protected void onDraw(android.graphics.Canvas c) {
+            super.onDraw(c);
+            float x=getWidth()/2f, y=getHeight()/2f, u=dp(1);
+            p.setColor(color); p.setStrokeWidth(dp(2)); p.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+            p.setStrokeJoin(android.graphics.Paint.Join.ROUND); p.setStyle(android.graphics.Paint.Style.STROKE);
+            float l=x-dp(11), r=x+dp(11), t=y-dp(12), b=y+dp(12);
+            if(kind.contains("ساختمان") || kind.contains("پرونده")) {
+                c.drawRoundRect(l,t,r,b,dp(2),dp(2),p);
+                c.drawLine(l,y-dp(4),r,y-dp(4),p); c.drawLine(x,y-dp(4),x,b,p);
+                c.drawLine(l,y+dp(4),r,y+dp(4),p);
+            } else if(kind.contains("امروز")) {
+                c.drawCircle(x,y,dp(10),p); c.drawLine(x,y,x,y-dp(6),p); c.drawLine(x,y,x+dp(5),y+dp(3),p);
+                c.drawLine(l-dp(1),t+dp(1),l+dp(5),t+dp(1),p);
+            } else if(kind.contains("انجام")) {
+                c.drawCircle(x,y,dp(10),p); c.drawLine(x-dp(5),y,x-dp(1),y+dp(4),p); c.drawLine(x-dp(1),y+dp(4),x+dp(6),y-dp(5),p);
+            } else if(kind.contains("طلب")) {
+                c.drawRoundRect(l,t,r,b,dp(3),dp(3),p); c.drawLine(l+dp(4),y-dp(4),r-dp(4),y-dp(4),p);
+                c.drawLine(l+dp(4),y,r-dp(4),y,p); c.drawLine(l+dp(4),y+dp(4),x+dp(2),y+dp(4),p);
+            } else if(kind.contains("تنظیم")) {
+                c.drawCircle(x,y,dp(8),p); c.drawCircle(x,y,dp(3),p);
+                for(int a=0;a<8;a++){ double q=a*Math.PI/4; float x1=x+(float)Math.cos(q)*dp(9), y1=y+(float)Math.sin(q)*dp(9);
+                    float x2=x+(float)Math.cos(q)*dp(12), y2=y+(float)Math.sin(q)*dp(12); c.drawLine(x1,y1,x2,y2,p); }
+            } else {
+                c.drawRoundRect(l,t,r,b,dp(3),dp(3),p); c.drawLine(x,t,x,b,p);
+                c.drawLine(x-dp(5),y-dp(3),x,y-dp(8),p); c.drawLine(x,y-dp(8),x+dp(5),y-dp(3),p);
+                c.drawLine(x-dp(5),y+dp(3),x,y+dp(8),p); c.drawLine(x,y+dp(8),x+dp(5),y+dp(3),p);
+            }
         }
     }
 
