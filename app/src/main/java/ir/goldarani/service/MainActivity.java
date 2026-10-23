@@ -157,14 +157,14 @@ public class MainActivity extends Activity {
         content.addView(grid1);
         LinearLayout grid2=row(); grid2.setWeightSum(2);
         gridTile(grid2,"✓","انجام‌شده‌ها",PURPLE,()->showServiceList("completed"));
-        gridTile(grid2,"🏢","ساختمان‌ها",TEAL,()->showList("buildings"));
+        gridTile(grid2,"🏢","اطلاعات ساختمان‌ها",TEAL,()->showServiceList("all"));
         content.addView(grid2);
         LinearLayout grid3=row(); grid3.setWeightSum(2);
         gridTile(grid3,"💰","طلب‌ها",ORANGE,()->showList("debts"));
         gridTile(grid3,"⚙","تنظیمات",PURPLE,()->showSettings()); content.addView(grid3);
         TextView summary=text("خلاصه وضعیت",16,txt(),true); summary.setPadding(dp(2),dp(14),dp(2),dp(5)); content.addView(summary);
         LinearLayout stats=row();
-        stat(stats,"سرویس‌ها",db.count("services"),BLUE); stat(stats,"ساختمان‌ها",db.count("buildings"),TEAL); stat(stats,"طلب‌ها",db.count("debts"),ORANGE);
+        stat(stats,"ساختمان/سرویس",db.count("services"),BLUE); stat(stats,"طلب‌ها",db.count("debts"),ORANGE);
         content.addView(stats);
         LinearLayout due=column(); due.addView(text("مجموع طلب‌های ثبت‌شده",14,muted(),true));
         due.addView(text(money(db.totalDebts())+" تومان",24,GOLD,true));
@@ -192,8 +192,8 @@ public class MainActivity extends Activity {
 
     private void addBottomNav() {
         LinearLayout nav=row(); nav.setPadding(dp(5),dp(7),dp(5),dp(7)); nav.setBackgroundColor(dark?Color.rgb(5,17,32):Color.rgb(225,234,243));
-        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"🔧","سرویس",()->showForm("services"));
-        navItem(nav,"▦","ساختمان",()->showList("buildings")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
+        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"＋","ثبت مورد",()->showForm("services"));
+        navItem(nav,"▤","فهرست",()->showServiceList("all")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
         root.addView(nav);
     }
     private void navItem(LinearLayout nav,String icon,String label,Runnable r) {
@@ -204,34 +204,34 @@ public class MainActivity extends Activity {
     }
 
     private void showForm(String type) {
-        page=type; boolean service=type.equals("services");
-        setup(service?"ثبت سرویس جدید":"ثبت اطلاعات");
-        content.addView(text(service?"اطلاعات سرویس را وارد کنید":"اطلاعات ساختمان را وارد کنید",17,txt(),true));
-        EditText title=edit(service?"نام ساختمان / مشتری":"نام ساختمان","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        EditText date=edit(service?"تاریخ سرویس (شمسی: 1405/07/01)":"آدرس ساختمان",service?todayJalali():"",InputType.TYPE_CLASS_TEXT);
-        EditText details=edit(service?"نوع سرویس و توضیحات":"تعداد طبقات / توضیحات","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        EditText serviceAmount=null, repairDetails=null, repairAmount=null;
-        if(service) {
-            serviceAmount=edit("مبلغ سرویس دوره‌ای (تومان)","",InputType.TYPE_CLASS_NUMBER);
-            repairDetails=edit("شرح خرابی / تعمیرات (در صورت وجود)","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-            repairAmount=edit("مبلغ تعمیرات (تومان)","",InputType.TYPE_CLASS_NUMBER);
-        }
-        content.addView(title); content.addView(date); content.addView(details);
-        if(service) { content.addView(serviceAmount); content.addView(repairDetails); content.addView(repairAmount); }
-        final EditText serviceAmountFinal=serviceAmount, repairDetailsFinal=repairDetails, repairAmountFinal=repairAmount;
-        addButton(service?"ثبت سرویس ✓":"ثبت ساختمان ✓",BLUE,()->{
-            String a=title.getText().toString().trim(), b=date.getText().toString().trim(), c=details.getText().toString().trim();
-            if(a.isEmpty()) {toast("نام را وارد کنید");return;}
-            if(service && !validDate(b)) {toast("تاریخ را به شکل 1405/07/01 وارد کنید");return;}
-            if(service) {
-                b=normalizeJalaliDate(b);
-                long serviceCost=parseAmount(serviceAmountFinal.getText().toString().trim());
-                long repairCost=parseAmount(repairAmountFinal.getText().toString().trim());
-                db.insertService(a,b,c,serviceCost,repairDetailsFinal.getText().toString().trim(),repairCost);
-            } else db.insert(type,a,b,c);
-            hideKeyboard(); toast(service?"سرویس و مبالغ ثبت شد":"ساختمان ثبت شد"); if(service) showServiceList("today"); else showList(type);
+        page="services"; setup("ثبت ساختمان و سرویس");
+        content.addView(text("اطلاعات ساختمان و برنامه سرویس را یک‌جا ثبت کنید",17,txt(),true));
+        EditText title=edit("نام ساختمان","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        EditText address=edit("آدرس کامل ساختمان","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        EditText manager=edit("نام مدیر ساختمان","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        EditText phone=edit("شماره تماس مدیر ساختمان","",InputType.TYPE_CLASS_PHONE);
+        EditText date=edit("تاریخ سرویس (شمسی: 1405/07/01)",todayJalali(),InputType.TYPE_CLASS_TEXT);
+        EditText serviceAmount=edit("مبلغ سرویس دوره‌ای (تومان)","",InputType.TYPE_CLASS_NUMBER);
+        EditText repairDetails=edit("شرح خرابی / تعمیرات (در صورت وجود)","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        EditText repairAmount=edit("مبلغ تعمیرات (تومان)","",InputType.TYPE_CLASS_NUMBER);
+        EditText notes=edit("توضیحات تکمیلی (اختیاری)","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        content.addView(title); content.addView(address); content.addView(manager); content.addView(phone);
+        content.addView(date); content.addView(serviceAmount); content.addView(repairDetails); content.addView(repairAmount); content.addView(notes);
+        addButton("ثبت اطلاعات ساختمان و سرویس ✓",BLUE,()->{
+            String a=title.getText().toString().trim(), addr=address.getText().toString().trim(), mgr=manager.getText().toString().trim(), ph=phone.getText().toString().trim(), dt=date.getText().toString().trim();
+            if(a.isEmpty()) {toast("نام ساختمان را وارد کنید");return;}
+            if(addr.isEmpty()) {toast("آدرس ساختمان را وارد کنید");return;}
+            if(mgr.isEmpty()) {toast("نام مدیر ساختمان را وارد کنید");return;}
+            if(ph.isEmpty()) {toast("شماره مدیر ساختمان را وارد کنید");return;}
+            if(!validDate(dt)) {toast("تاریخ را به شکل 1405/07/01 وارد کنید");return;}
+            long serviceCost=parseAmount(serviceAmount.getText().toString().trim());
+            long repairCost=parseAmount(repairAmount.getText().toString().trim());
+            String extra=notes.getText().toString().trim();
+            String desc=extra;
+            db.insertService(a,normalizeJalaliDate(dt),desc,serviceCost,repairDetails.getText().toString().trim(),repairCost,addr,mgr,ph);
+            hideKeyboard(); toast("اطلاعات ساختمان و سرویس ثبت شد"); showServiceList("today");
         });
-        if(service) addButton("مشاهده سرویس‌های ثبت‌شده",PANEL2,()->showList("services"));
+        addButton("مشاهده فهرست ساختمان‌ها و سرویس‌ها",PANEL2,()->showServiceList("all"));
     }
 
     private void showList(String type) {
@@ -285,14 +285,17 @@ public class MainActivity extends Activity {
         }
         while(c.moveToNext()) {
             final int id=c.getInt(0); String a=c.getString(1), date=c.getString(2), details=c.getString(3); boolean done=c.getInt(4)==1;
-            long serviceCost=c.getLong(5), repairCost=c.getLong(7); String repairDetails=c.getString(6);
+            long serviceCost=c.getLong(5), repairCost=c.getLong(7); String repairDetails=c.getString(6); String address=c.getString(8), manager=c.getString(9), phone=c.getString(10);
             LinearLayout item=column();
             LinearLayout titleRow=row();
             TextView nm=text(a,16,txt(),true); titleRow.addView(nm,new LinearLayout.LayoutParams(0,-2,1));
             TextView badge=text(done?"انجام شد":"در انتظار",11,done?TEAL:ORANGE,true); badge.setGravity(Gravity.CENTER); badge.setPadding(dp(9),dp(5),dp(9),dp(5)); badge.setBackground(shape(done?Color.rgb(16,91,86):Color.rgb(105,61,25),12,0)); titleRow.addView(badge);
             item.addView(titleRow);
-            item.addView(text("📅 تاریخ: "+(date==null?"—":date),13,GOLD,true));
-            if(details!=null&&!details.isEmpty()) item.addView(text(details,13,muted(),false));
+            item.addView(text("👤 مدیر ساختمان: "+(manager==null?"—":manager),13,txt(),true));
+            item.addView(text("📞 شماره مدیر: "+(phone==null?"—":phone),13,muted(),false));
+            item.addView(text("📍 آدرس: "+(address==null?"—":address),13,muted(),false));
+            item.addView(text("📅 تاریخ سرویس: "+(date==null?"—":date),13,GOLD,true));
+            if(details!=null&&!details.isEmpty()) item.addView(text("توضیحات: "+details,13,muted(),false));
             item.addView(text("مبلغ سرویس: "+money(serviceCost)+" تومان",13,GOLD,true));
             if(repairDetails!=null&&!repairDetails.isEmpty()) item.addView(text("شرح خرابی: "+repairDetails,13,muted(),false));
             if(repairCost>0) item.addView(text("مبلغ تعمیرات: "+money(repairCost)+" تومان",13,ORANGE,true));
@@ -303,7 +306,7 @@ public class MainActivity extends Activity {
             item.addView(actions); card(content,item);
         }
         c.close();
-        addButton("+ ثبت سرویس جدید",BLUE,()->showForm("services"));
+        addButton("+ ثبت ساختمان و سرویس جدید",BLUE,()->showForm("services"));
         addButton("بازگشت به خانه",PANEL2,()->showHome());
     }
 
@@ -406,9 +409,9 @@ public class MainActivity extends Activity {
     private long parseAmount(String raw) { if(raw==null)return 0; StringBuilder digits=new StringBuilder(); for(int i=0;i<raw.length();i++){char ch=raw.charAt(i); if(ch>='۰'&&ch<='۹') digits.append((char)(ch-'۰'+'0')); else if(ch>='٠'&&ch<='٩') digits.append((char)(ch-'٠'+'0')); else if(ch>='0'&&ch<='9') digits.append(ch); } try{return Long.parseLong(digits.toString());}catch(Exception e){return 0;} }
 
     private class Db extends SQLiteOpenHelper {
-        Db(Context c){super(c,"goldarani_local.db",null,3);}
+        Db(Context c){super(c,"goldarani_local.db",null,4);}
         @Override public void onCreate(SQLiteDatabase d) {
-            d.execSQL("CREATE TABLE services (_id INTEGER PRIMARY KEY AUTOINCREMENT, a TEXT, b TEXT, c TEXT, completed INTEGER NOT NULL DEFAULT 0, service_amount INTEGER NOT NULL DEFAULT 0, repair_details TEXT, repair_amount INTEGER NOT NULL DEFAULT 0)");
+            d.execSQL("CREATE TABLE services (_id INTEGER PRIMARY KEY AUTOINCREMENT, a TEXT, b TEXT, c TEXT, completed INTEGER NOT NULL DEFAULT 0, service_amount INTEGER NOT NULL DEFAULT 0, repair_details TEXT, repair_amount INTEGER NOT NULL DEFAULT 0, address TEXT, manager TEXT, manager_phone TEXT)");
             d.execSQL("CREATE TABLE buildings (_id INTEGER PRIMARY KEY AUTOINCREMENT, a TEXT, b TEXT, c TEXT)");
             d.execSQL("CREATE TABLE debts (_id INTEGER PRIMARY KEY AUTOINCREMENT, a TEXT, b TEXT, c TEXT)");
         }
@@ -419,14 +422,19 @@ public class MainActivity extends Activity {
                 d.execSQL("ALTER TABLE services ADD COLUMN repair_details TEXT");
                 d.execSQL("ALTER TABLE services ADD COLUMN repair_amount INTEGER NOT NULL DEFAULT 0");
             }
+            if(oldV<4) {
+                d.execSQL("ALTER TABLE services ADD COLUMN address TEXT");
+                d.execSQL("ALTER TABLE services ADD COLUMN manager TEXT");
+                d.execSQL("ALTER TABLE services ADD COLUMN manager_phone TEXT");
+            }
         }
         void insert(String table,String a,String b,String c){getWritableDatabase().execSQL("INSERT INTO "+table+"(a,b,c) VALUES(?,?,?)",new Object[]{a,b,c});}
-        void insertService(String a,String date,String details,long serviceAmount,String repairDetails,long repairAmount){
-            getWritableDatabase().execSQL("INSERT INTO services(a,b,c,completed,service_amount,repair_details,repair_amount) VALUES(?,?,?,0,?,?,?)",new Object[]{a,date,details,serviceAmount,repairDetails,repairAmount});
+        void insertService(String a,String date,String details,long serviceAmount,String repairDetails,long repairAmount,String address,String manager,String phone){
+            getWritableDatabase().execSQL("INSERT INTO services(a,b,c,completed,service_amount,repair_details,repair_amount,address,manager,manager_phone) VALUES(?,?,?,0,?,?,?,?,?,?)",new Object[]{a,date,details,serviceAmount,repairDetails,repairAmount,address,manager,phone});
         }
         void delete(int id,String table){getWritableDatabase().delete(table,"_id=?",new String[]{String.valueOf(id)});}
         Cursor list(String table){return getReadableDatabase().rawQuery("SELECT _id,a,b,c FROM "+table+" ORDER BY _id DESC",null);}
-        Cursor serviceList(String filter,String today){ String where=""; if(filter.equals("today")) where=" WHERE completed=0 AND b=?"; else if(filter.equals("completed")) where=" WHERE completed=1"; return filter.equals("today") ? getReadableDatabase().rawQuery("SELECT _id,a,b,c,completed,service_amount,repair_details,repair_amount FROM services"+where+" ORDER BY _id DESC",new String[]{today}) : getReadableDatabase().rawQuery("SELECT _id,a,b,c,completed,service_amount,repair_details,repair_amount FROM services"+where+" ORDER BY _id DESC",null); }
+        Cursor serviceList(String filter,String today){ String where=""; if(filter.equals("today")) where=" WHERE completed=0 AND b=?"; else if(filter.equals("completed")) where=" WHERE completed=1"; String sql="SELECT _id,a,b,c,completed,service_amount,repair_details,repair_amount,address,manager,manager_phone FROM services"+where+" ORDER BY _id DESC"; return filter.equals("today") ? getReadableDatabase().rawQuery(sql,new String[]{today}) : getReadableDatabase().rawQuery(sql,null); }
         void markServiceDone(int id){getWritableDatabase().execSQL("UPDATE services SET completed=1 WHERE _id=?",new Object[]{id});}
         int countTodayServices(String today){Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM services WHERE completed=0 AND b=?",new String[]{today});int n=0;if(c.moveToFirst())n=c.getInt(0);c.close();return n;}
         long totalDebts(){
