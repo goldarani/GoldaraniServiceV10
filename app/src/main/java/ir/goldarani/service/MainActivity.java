@@ -152,12 +152,12 @@ public class MainActivity extends Activity {
         card(content,welcome);
         TextView section=text("مدیریت خدمات شما",17,txt(),true); section.setPadding(dp(2),dp(10),dp(2),dp(5)); content.addView(section);
         LinearLayout grid1=row(); grid1.setWeightSum(2);
-        gridTile(grid1,"🔧","ثبت سرویس",BLUE,()->showForm("services"));
+        gridTile(grid1,"🏢","ثبت پرونده ساختمان",BLUE,()->showForm("services"));
         gridTile(grid1,"📅","سرویس‌های امروز",TEAL,()->showServiceList("today"));
         content.addView(grid1);
         LinearLayout grid2=row(); grid2.setWeightSum(2);
         gridTile(grid2,"✓","انجام‌شده‌ها",PURPLE,()->showServiceList("completed"));
-        gridTile(grid2,"🏢","اطلاعات ساختمان‌ها",TEAL,()->showServiceList("all"));
+        gridTile(grid2,"📋","پرونده‌های ساختمان و سرویس",TEAL,()->showServiceList("all"));
         content.addView(grid2);
         LinearLayout grid3=row(); grid3.setWeightSum(2);
         gridTile(grid3,"💰","طلب‌ها",ORANGE,()->showList("debts"));
@@ -192,8 +192,8 @@ public class MainActivity extends Activity {
 
     private void addBottomNav() {
         LinearLayout nav=row(); nav.setPadding(dp(5),dp(7),dp(5),dp(7)); nav.setBackgroundColor(dark?Color.rgb(5,17,32):Color.rgb(225,234,243));
-        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"＋","ثبت مورد",()->showForm("services"));
-        navItem(nav,"▤","فهرست",()->showServiceList("all")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
+        navItem(nav,"⌂","خانه",()->showHome()); navItem(nav,"＋","ثبت ساختمان",()->showForm("services"));
+        navItem(nav,"▤","پرونده‌ها",()->showServiceList("all")); navItem(nav,"◉","طلب‌ها",()->showList("debts")); navItem(nav,"⚙","تنظیمات",()->showSettings());
         root.addView(nav);
     }
     private void navItem(LinearLayout nav,String icon,String label,Runnable r) {
@@ -267,11 +267,11 @@ public class MainActivity extends Activity {
     }
 
     private void showServiceList(String filter) {
-        page="services"; setup(filter.equals("completed")?"سرویس‌های انجام‌شده":filter.equals("today")?"سرویس‌های امروز":"مدیریت سرویس‌ها");
+        page="services"; setup(filter.equals("completed")?"سرویس‌های انجام‌شده":filter.equals("today")?"سرویس‌های امروز":"پرونده‌های ساختمان و سرویس");
         LinearLayout tabs=row();
         tab(tabs,"امروز",filter.equals("today"),()->showServiceList("today"));
         tab(tabs,"انجام‌شده",filter.equals("completed"),()->showServiceList("completed"));
-        tab(tabs,"همه سرویس‌ها",filter.equals("all"),()->showServiceList("all"));
+        tab(tabs,"همه پرونده‌ها",filter.equals("all"),()->showServiceList("all"));
         content.addView(tabs);
         LinearLayout summary=column();
         summary.addView(text("امروز: "+todayJalali(),14,GOLD,true));
@@ -306,7 +306,7 @@ public class MainActivity extends Activity {
             item.addView(actions); card(content,item);
         }
         c.close();
-        addButton("+ ثبت ساختمان و سرویس جدید",BLUE,()->showForm("services"));
+        addButton("+ ثبت پرونده ساختمان و سرویس",BLUE,()->showForm("services"));
         addButton("بازگشت به خانه",PANEL2,()->showHome());
     }
 
